@@ -1,0 +1,21 @@
+[LAMBDA]
+LIST_SITES_URL = https://tqlyfr3skcp62vwonfvq57uz640kyrzs.lambda-url.us-east-1.on.aws/
+
+[OPENSEARCH]
+HOST = elk.lareferencia.info
+PORT = 80
+USER = lareferencia
+PASSWORD = lareferencia
+
+[CORS]
+FILENAME = cors.txt
+
+
+
+
+
+
+
+
+
+
