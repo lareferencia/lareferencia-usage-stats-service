@@ -1,0 +1,12 @@
+[Unit]
+Description=statsapi daemon
+After=network.target
+
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user/lareferencia-usage-stats-service
+ExecStart=/usr/local/bin/hypercorn --workers 5 --bind 127.0.0.1:8099 --root-path /api/usage_stats/v2 main:app 
+
+[Install]
+WantedBy=multi-user.target
