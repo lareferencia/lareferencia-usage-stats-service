@@ -15,12 +15,12 @@ from opensearchpy import OpenSearch, exceptions
 app = FastAPI(
     title="LA Referencia Usage Statistics API",
     description="API for usage statistics of the LA Referencia service",
-    version="0.0.1",
+    version="2.0.0",
     terms_of_service="",
     contact={
         "name": "Lautaro Matas",
         "url": "http://www.lareferencia.info",
-        "email": "lautaro.matas@redclara.net",
+        "email": "lautaro.matas@lareferencia.redclara.net",
     },
     license_info={
         "name": "AGPL-3.0",
@@ -68,7 +68,7 @@ def build_index_name(source, country = '*', year = '*'):
 
 
 @app.get("/report/repositoryWidget")
-async def repositoryWidget(identifier: str = None, country : 'str' = '*',  regional_source:'str' = '*', national_source: 'str' = '*', repository_source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
+async def repositoryWidget(identifier: str = None, repository_source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
 
     host = config["OPENSEARCH"]["HOST"]
     port = int(config["OPENSEARCH"]["PORT"])
@@ -77,60 +77,55 @@ async def repositoryWidget(identifier: str = None, country : 'str' = '*',  regio
     client = OpenSearch(
         hosts = [{'host': host, 'port': port}],
         http_compress = True, # enables gzip compression for request bodies
-        # http_auth = auth,
-        # client_cert = client_cert_path,
-        # client_key = client_key_path,
         use_ssl = False
     )
 
+
     query = {
         "aggs": {
-        "level": {
-            
-            "terms": {
-            "field": "container.level",
-            "order": {
-            "_count": "desc"
-            },
-            "size": 5
-            },
-            
-            "aggs": {
-            
-            "action": {
-                "terms": {
-                "field": "event.action",
-                "order": {
-                    "_count": "desc"
-                },
-                "size": 3
-                },
+            "views": { "sum": { "field": "views" }},
+            "downloads": { "sum": { "field": "downloads" }},
+            "conversions": { "sum": {"field": "conversions" }},
+            "outlinks": { "sum": { "field": "outlinks" }},
+        
+            "level": {
+                "terms": {"field": "level",
+                "order": { "_key": "desc"},
+                "size": 5 },
                 "aggs": {
-                "time": {
-                    "date_histogram": {
-                    "field": "event.created",
-                    "calendar_interval": time_unit,
+                    "views": { "sum": { "field": "views" }},
+                    "downloads": { "sum": { "field": "downloads" }},
+                    "conversions": { "sum": {"field": "conversions" }},
+                    "outlinks": { "sum": { "field": "outlinks" }},
+                    
+                    "time": {
+                        "date_histogram": {
+                            "field": "date",
+                            "calendar_interval": "1m",
+                            "min_doc_count": 1
+                        },
+                        "aggs": {
+                            "views": {"sum": { "field": "stats_by_country.views" } },
+                            "downloads": {"sum": { "field": "stats_by_country.downloads" } },
+                            "conversions": {"sum": { "field": "stats_by_country.conversions" } },
+                            "outlinks": {"sum": { "field": "stats_by_country.outlinks" } }
+                        }
                     }
                 }
-                }
-            
             }
-            }
-        }
         },
         "size": 0,
         "query": {
-        "bool": {
-            "should": [
-            {
-                "match_phrase": {
-                "event.target.oai_identifier": identifier #"oai:repositorio.concytec.gob.pe:20.500.12390/2238"
-                }
-            }
-            ],
-            "minimum_should_match": 1,
-            "must": [],
-            
+            "bool": {
+                "must": [
+                    {
+                        "query_string": {
+                            "query": "identifier:\"oai:sedici.unlp.edu.ar:*\"",
+                            "analyze_wildcard": "true"
+                        }
+                    }
+                ]
+            },
             "filter": [
             {
                 "range": {
@@ -142,25 +137,88 @@ async def repositoryWidget(identifier: str = None, country : 'str' = '*',  regio
                 }
             }
             ]
-            
-            
-        }
-        }
+        },
+        "track_total_hits": "false"
+    }
+
+    query = {
+        "aggs": {
+            "views": { "sum": { "field": "views" }},
+            "downloads": { "sum": { "field": "downloads" }},
+            "conversions": { "sum": {"field": "conversions" }},
+            "outlinks": { "sum": { "field": "outlinks" }},
+        
+            "level": {
+                "terms": {"field": "level",
+                "order": { "_key": "desc"},
+                "size": 5 },
+                "aggs": {
+                    "views": { "sum": { "field": "views" }},
+                    "downloads": { "sum": { "field": "downloads" }},
+                    "conversions": { "sum": {"field": "conversions" }},
+                    "outlinks": { "sum": { "field": "outlinks" }},
+                    
+                    "time": {
+                        "date_histogram": {
+                            "field": "date",
+                            "calendar_interval": "1m",
+                            "min_doc_count": 1
+                        },
+                        "aggs": {
+                              "views": { "sum": { "field": "views" }},
+                              "downloads": { "sum": { "field": "downloads" }},
+                              "conversions": { "sum": {"field": "conversions" }},
+                              "outlinks": { "sum": { "field": "outlinks" }}
+                        }
+                    }
+                }
+            }
+        },
+        "size": 0,
+        
+        "query": {
+          "bool": {
+            "should": [
+              {
+                  "match_phrase": {
+                        "identifier": "oai:sedici.unlp.edu.ar:*"
+                  }
+              }
+            ],
+            "minimum_should_match": 1,
+            "must": [],
+            "filter": [
+              {
+                "range": {
+                "date": {
+                    "gte": start_date,
+                    "lte": end_date,
+                    "format": "strict_date_optional_time"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        
+        "track_total_hits": "false"
     }
 
     # if identifier is None then remove the identifier filter
-    if identifier is None:
-        del query['query']['bool']['should'][0]
-        del query['query']['bool']['minimum_should_match']
+    #if identifier is None:
+    #    del query['query']['bool']['should'][0]
+    #    del query['query']['bool']['minimum_should_match']
 
-    indices = set()
+    # indices = set()
 
-    indices.add(build_index_name(regional_source, '00', '*'))
-    indices.add(build_index_name(national_source, country, '*'))
-    indices.add(build_index_name(repository_source, country, '*'))
+    # indices.add(build_index_name(regional_source, '00', '*'))
+    # indices.add(build_index_name(national_source, country, '*'))
+    # indices.add(build_index_name(repository_source, country, '*'))
     
-    indices = list(indices)
+    # indices = list(indices)
 
+
+    indices = ["test-processor-*"]
 
     try:
         response = client.search(
@@ -173,243 +231,4 @@ async def repositoryWidget(identifier: str = None, country : 'str' = '*',  regio
 
     return response.get("aggregations", {})
 
-@app.get("/report/byLevelActionTime")
-async def byLevelActionTime(identifier: str = None, country: 'str' = None, source : str = None, year: int = None, start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
-
-    host = config["OPENSEARCH"]["HOST"]
-    port = int(config["OPENSEARCH"]["PORT"])
-    auth = (config["OPENSEARCH"]["USER"], config["OPENSEARCH"]["PASSWORD"]) 
-
-    client = OpenSearch(
-        hosts = [{'host': host, 'port': port}],
-        http_compress = True, # enables gzip compression for request bodies
-        # http_auth = auth,
-        # client_cert = client_cert_path,
-        # client_key = client_key_path,
-        use_ssl = False
-    )
-
-    query = {
-        "aggs": {
-        "level": {
-            
-            "terms": {
-            "field": "container.level",
-            "order": {
-            "_count": "desc"
-            },
-            "size": 5
-            },
-            
-            "aggs": {
-            
-            "action": {
-                "terms": {
-                "field": "event.action",
-                "order": {
-                    "_count": "desc"
-                },
-                "size": 3
-                },
-                "aggs": {
-                "time": {
-                    "date_histogram": {
-                    "field": "event.created",
-                    "calendar_interval": time_unit,
-                    }
-                }
-                }
-            
-            }
-            }
-        }
-        },
-        "size": 0,
-        "query": {
-        "bool": {
-            "should": [
-            {
-                "match_phrase": {
-                "event.target.oai_identifier": identifier #"oai:repositorio.concytec.gob.pe:20.500.12390/2238"
-                }
-            }
-            ],
-            "minimum_should_match": 1,
-            "must": [],
-            
-            "filter": [
-            {
-                "range": {
-                "event.created": {
-                    "gte": start_date,
-                    "lte": end_date,
-                    "format": "strict_date_optional_time"
-                }
-                }
-            }
-            ]
-            
-            
-        }
-        }
-    }
-
-    # if identifier is None then remove the identifier filter
-    if identifier is None:
-        del query['query']['bool']['should'][0]
-        del query['query']['bool']['minimum_should_match']
-
-    
-    # if source is None then use wildcard
-    if source is None:
-        source = "*"
-    else:
-        source = source.replace('::', '_')
-
-    # if country is None then use wildcard
-    if country is None:
-        country = "*"
-   
-    # if year is None then use wildcard
-    if year is None:
-        year = "*"
-
-    # build index name from parameters
-    index_name = 'usage_stats_%s_%s_%s' % (country, source, year)
-    index_name = index_name.lower() 
-
-    try:
-        response = client.search(
-            body = query,
-            index = index_name
-        )
-    except exceptions.NotFoundError:
-        print("Index not found: %s" % index_name)
-        return {}
-
-    return response.get("aggregations", {})
-
-@app.get("/report/byRepositoryActionTime")
-async def byRepositoryActionTime(identifier: str = None, repository_id: str = None, country: 'str' = None, source : str = None, year: int = None, start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
-
-    host = config["OPENSEARCH"]["HOST"]
-    port = int(config["OPENSEARCH"]["PORT"])
-    auth = (config["OPENSEARCH"]["USER"], config["OPENSEARCH"]["PASSWORD"]) 
-
-    client = OpenSearch(
-        hosts = [{'host': host, 'port': port}],
-        http_compress = True, # enables gzip compression for request bodies
-        # http_auth = auth,
-        # client_cert = client_cert_path,
-        # client_key = client_key_path,
-        use_ssl = False
-    )
-
-    query = {
-        "aggs": {
-        "repository": {
-            
-            "terms": {
-            "field": "event.target.repository_id",
-            "order": {
-            "_count": "desc"
-            },
-            "size": 5
-            },
-            
-            "aggs": {
-            
-            "action": {
-                "terms": {
-                "field": "event.action",
-                "order": {
-                    "_count": "desc"
-                },
-                "size": 3
-                },
-                "aggs": {
-                "time": {
-                    "date_histogram": {
-                    "field": "event.created",
-                    "calendar_interval": time_unit,
-                    }
-                }
-                }
-            
-            }
-            }
-        }
-        },
-        "size": 0,
-        "query": {
-        "bool": {
-            "should": [
-            {
-                "match_phrase": {
-                "event.target.oai_identifier": identifier,
-                "event.target.repository_id": repository_id
-                }
-            }
-            ],
-            "minimum_should_match": 1,
-            "must": [],
-            
-            "filter": [
-            {
-                "range": {
-                "event.created": {
-                    "gte": start_date,
-                    "lte": end_date,
-                    "format": "strict_date_optional_time"
-                }
-                }
-            }
-            ]
-            
-            
-        }
-        }
-    }
-
-    # if identifier is None then remove the identifier filter
-    if identifier is None:
-        del query['query']['bool']['should'][0]['match_phrase']['event.target.oai_identifier']
-
-    # if repository_id is None then remove the repository_id filter        
-    if repository_id is None:
-        del query['query']['bool']['should'][0]['match_phrase']['event.target.repository_id']
-
-    # if repository_id is None then remove the should filter
-    if repository_id is None and identifier is None:
-        del query['query']['bool']['should'][0]
-        del query['query']['bool']['minimum_should_match']
-
-    # if source is None then use wildcard
-    if source is None:
-        source = "*"
-    else:
-        source = source.replace('::', '_')
-
-    # if country is None then use wildcard
-    if country is None:
-        country = "*"
-   
-    # if year is None then use wildcard
-    if year is None:
-        year = "*"
-
-    # build index name from parameters
-    index_name = 'usage_stats_%s_%s_%s' % (country, source, year)
-    index_name = index_name.lower() 
-
-    try:
-        response = client.search(
-            body = query,
-            index = index_name
-        )
-    except exceptions.NotFoundError:
-        print("Index not found: %s" % index_name)
-        return {}
-
-    return response.get("aggregations", {})
 
