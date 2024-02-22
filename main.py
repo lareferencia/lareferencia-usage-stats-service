@@ -68,7 +68,7 @@ def build_index_name(source, country = '*', year = '*'):
 
 
 @app.get("/report/repositoryWidget")
-async def repositoryWidget(identifier: str = None, repository_source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
+async def repositoryWidget(identifier: str = None, source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
 
     host = config["OPENSEARCH"]["HOST"]
     port = int(config["OPENSEARCH"]["PORT"])
