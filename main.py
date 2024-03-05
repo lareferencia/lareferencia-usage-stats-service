@@ -80,9 +80,8 @@ async def repositoryWidget(identifier: str = None, source: str = '*', start_date
         use_ssl = False
     )
 
-
     query = {
-        "aggs": {
+       "aggs": {
             "views": { "sum": { "field": "views" }},
             "downloads": { "sum": { "field": "downloads" }},
             "conversions": { "sum": {"field": "conversions" }},
@@ -113,66 +112,6 @@ async def repositoryWidget(identifier: str = None, source: str = '*', start_date
                         "order": { "_key": "desc"},
                         "size": 5 },
                     
-                        "aggs": {
-                              "views": { "sum": { "field": "views" }},
-                              "downloads": { "sum": { "field": "downloads" }},
-                              "conversions": { "sum": {"field": "conversions" }},
-                              "outlinks": { "sum": { "field": "outlinks" }}
-                        }
-                    }
-                }
-            }
-        },
-        "size": 0,
-        "query": {
-            "bool": {
-                "must": [
-                    {
-                        "query_string": {
-                            "query": "identifier:\"oai:sedici.unlp.edu.ar:*\"",
-                            "analyze_wildcard": "true"
-                        }
-                    }
-                ]
-            },
-            "filter": [
-            {
-                "range": {
-                "event.created": {
-                    "gte": start_date,
-                    "lte": end_date,
-                    "format": "strict_date_optional_time"
-                }
-                }
-            }
-            ]
-        },
-        "track_total_hits": "false"
-    }
-
-    query = {
-        "aggs": {
-            "views": { "sum": { "field": "views" }},
-            "downloads": { "sum": { "field": "downloads" }},
-            "conversions": { "sum": {"field": "conversions" }},
-            "outlinks": { "sum": { "field": "outlinks" }},
-        
-            "level": {
-                "terms": {"field": "level",
-                "order": { "_key": "desc"},
-                "size": 5 },
-                "aggs": {
-                    "views": { "sum": { "field": "views" }},
-                    "downloads": { "sum": { "field": "downloads" }},
-                    "conversions": { "sum": {"field": "conversions" }},
-                    "outlinks": { "sum": { "field": "outlinks" }},
-                    
-                    "time": {
-                        "date_histogram": {
-                            "field": "date",
-                            "calendar_interval": "1m",
-                            "min_doc_count": 1
-                        },
                         "aggs": {
                               "views": { "sum": { "field": "views" }},
                               "downloads": { "sum": { "field": "downloads" }},
