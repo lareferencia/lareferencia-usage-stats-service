@@ -87,28 +87,37 @@ async def repositoryWidget(identifier: str = None, source: str = '*', start_date
             "downloads": { "sum": { "field": "downloads" }},
             "conversions": { "sum": {"field": "conversions" }},
             "outlinks": { "sum": { "field": "outlinks" }},
-        
-            "level": {
-                "terms": {"field": "level",
-                "order": { "_key": "desc"},
-                "size": 5 },
-                "aggs": {
-                    "views": { "sum": { "field": "views" }},
-                    "downloads": { "sum": { "field": "downloads" }},
-                    "conversions": { "sum": {"field": "conversions" }},
-                    "outlinks": { "sum": { "field": "outlinks" }},
+            
+             "level": {
+                        "terms": {"field": "level",
+                        "order": { "_key": "desc"},
+                        "size": 5 },
                     
-                    "time": {
-                        "date_histogram": {
-                            "field": "date",
-                            "calendar_interval": "1m",
-                            "min_doc_count": 1
-                        },
                         "aggs": {
-                            "views": {"sum": { "field": "stats_by_country.views" } },
-                            "downloads": {"sum": { "field": "stats_by_country.downloads" } },
-                            "conversions": {"sum": { "field": "stats_by_country.conversions" } },
-                            "outlinks": {"sum": { "field": "stats_by_country.outlinks" } }
+                              "views": { "sum": { "field": "views" }},
+                              "downloads": { "sum": { "field": "downloads" }},
+                              "conversions": { "sum": {"field": "conversions" }},
+                              "outlinks": { "sum": { "field": "outlinks" }}
+                        }
+            },
+        
+            "time": {
+                "date_histogram": {
+                    "field": "date",
+                    "calendar_interval": "1m",
+                    "min_doc_count": 1
+                },
+                "aggs": {
+                    "level": {
+                        "terms": {"field": "level",
+                        "order": { "_key": "desc"},
+                        "size": 5 },
+                    
+                        "aggs": {
+                              "views": { "sum": { "field": "views" }},
+                              "downloads": { "sum": { "field": "downloads" }},
+                              "conversions": { "sum": {"field": "conversions" }},
+                              "outlinks": { "sum": { "field": "outlinks" }}
                         }
                     }
                 }
