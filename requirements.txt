@@ -1,5 +1,6 @@
 opensearch-py
 fastapi
 awswrangler
+pandas
 uvicorn[standard]
 gunicorn
