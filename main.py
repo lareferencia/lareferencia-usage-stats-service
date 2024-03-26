@@ -129,7 +129,7 @@ async def repositoryWidget(identifier: str = None, source: str = '*', start_date
             "should": [
               {
                   "match_phrase": {
-                        "identifier": "oai:sedici.unlp.edu.ar:*"
+                        "identifier": identifier
                   }
               }
             ],
@@ -153,9 +153,9 @@ async def repositoryWidget(identifier: str = None, source: str = '*', start_date
     }
 
     # if identifier is None then remove the identifier filter
-    #if identifier is None:
-    #    del query['query']['bool']['should'][0]
-    #    del query['query']['bool']['minimum_should_match']
+    # if identifier is None:
+    #     del query['query']['bool']['should'][0]
+    #     del query['query']['bool']['minimum_should_match']
 
     # indices = set()
 
