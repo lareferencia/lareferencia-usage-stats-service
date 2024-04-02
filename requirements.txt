@@ -1,6 +1,9 @@
 opensearch-py
 fastapi
 awswrangler
+awswrangler[opensearch]
 pandas
 uvicorn[standard]
 gunicorn
+SQLAlchemy==1.4.34 
+flask_appbuilder

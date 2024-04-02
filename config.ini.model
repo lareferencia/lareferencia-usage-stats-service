@@ -1,14 +1,19 @@
-[LAMBDA]
-LIST_SITES_URL = https://tqlyfr3skcp62vwonfvq57uz640kyrzs.lambda-url.us-east-1.on.aws/
-
 [OPENSEARCH]
 HOST = elk.lareferencia.info
-PORT = 80
+PORT = 443
+SSL = True
 USER = lareferencia
 PASSWORD = lareferencia
 
+[USAGE_STATS_DB]
+SQLALCHEMY_DATABASE_URI = mysql+pymysql://user:pass@server/lareferencia-usage-stats-db?charset=utf8mb4
+
+[USAGE_STATS_INDEX]
+INDEX_PREFIX = usage-stats
+
 [CORS]
 FILENAME = cors.txt
+
 
 
 
