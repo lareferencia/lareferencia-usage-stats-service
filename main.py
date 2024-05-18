@@ -62,6 +62,9 @@ try:
         http_compress = True, # enables gzip compression for request bodies
         use_ssl = is_ssl,
     )
+
+    print("Connected to OpenSearch")
+    print (client.info())
         
 
 except Exception as e:
