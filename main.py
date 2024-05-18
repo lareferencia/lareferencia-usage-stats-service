@@ -181,15 +181,17 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
         if len(indices) == 0:
             raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source, identifier))
         
+        print ("indices: %s" % indices)
+        
         response = client.search(
             body = query,
             index = ','.join(indices),
         )
     except Exception as e:
-        print ("Error: %s" % e)
+        #print ("Error: %s" % e)
         # stacktrace
-        import traceback
-        traceback.print_exc()
+        # import traceback
+        # traceback.print_exc()
         raise HTTPException(status_code=404, detail=str(e))
 
     if response is None or response.get("aggregations") is None:
