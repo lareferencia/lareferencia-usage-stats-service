@@ -41,6 +41,9 @@ try:
     # get config values
     cors_filename = config["CORS"]["FILENAME"]
 
+    # get index prefix
+    index_prefix = config["USAGE_STATS_INDEX"]["INDEX_PREFIX"]
+
     # read cors file
     with open(cors_filename, "r") as f:
         origins = f.read().splitlines()
@@ -170,10 +173,10 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
 
         try: 
             ## first try to get the indices from the identifier (this works if the repository is registered in the database)
-            indices = dbhelper.get_indices_from_identifier(identifier)
+            indices = dbhelper.get_indices_from_identifier(index_prefix, identifier)
         except IdentifierPrefixNotFoundException as e:
             ## if the identifier is not found in the database, then try to get the indices from the source (this will get national and regional statistics only)
-            indices = dbhelper.get_indices_from_source(source)
+            indices = dbhelper.get_indices_from_source(index_prefix, source)
 
         if len(indices) == 0:
             raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source, identifier))
