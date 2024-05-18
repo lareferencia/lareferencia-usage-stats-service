@@ -186,6 +186,10 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
             index = ','.join(indices),
         )
     except Exception as e:
+        print ("Error: %s" % e)
+        # stacktrace
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=404, detail=str(e))
 
     if response is None or response.get("aggregations") is None:
