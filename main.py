@@ -186,12 +186,10 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
         
         print ("indices: %s" % indices)
 
-        #query = {"query": {"match_all": {}}}
-        
         response = client.search(
             body = query,
-            #index = ','.join(indices),
-            index = "usage-stats-48-*",
+            index = ','.join(indices),
+            #index = "usage-stats-48-*",
         )
     except Exception as e:
         #print ("Error: %s" % e)
@@ -200,8 +198,6 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
         # traceback.print_exc()
         raise HTTPException(status_code=404, detail=str(e))
     
-    print ("response: %s" % response)
-
     if response is None or response.get("aggregations") is None:
         raise HTTPException(status_code=404, detail="Not found")   
  
