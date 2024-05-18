@@ -64,7 +64,7 @@ try:
     )
 
     print("Connected to OpenSearch")
-    print (client.info())
+    print ( client.info() )
         
 
 except Exception as e:
