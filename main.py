@@ -191,7 +191,7 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
         response = client.search(
             body = query,
             #index = ','.join(indices),
-            index = "usage-stats-*",
+            index = "usage-stats-48-*",
         )
     except Exception as e:
         #print ("Error: %s" % e)
