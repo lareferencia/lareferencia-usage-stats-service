@@ -182,6 +182,9 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
             raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source, identifier))
         
         print ("indices: %s" % indices)
+
+        query = {"query": {"match_all": {}}
+}
         
         response = client.search(
             body = query,
