@@ -184,7 +184,7 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
         if len(indices) == 0:
             raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source, identifier))
         
-        print ("indices: %s" % indices)
+        #print ("indices: %s" % indices)
 
         response = client.search(
             body = query,
@@ -225,7 +225,7 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
     identifier_pattern = identifier_prefix + "*"
     query = parametrize_query(identifier_pattern, start_date, end_date, time_unit)
 
-    indices = dbhelper.get_indices_from_identifier(identifier_prefix)
+    indices = dbhelper.get_indices_from_identifier(index_prefix,identifier_prefix)
 
     print("indices: %s" % indices)
 
@@ -258,7 +258,7 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
         raise HTTPException(status_code=404, detail="The source %s is not a national aggregator" % (source))
 
 
-    indices = dbhelper.get_indices_from_national(source_id)
+    indices = dbhelper.get_indices_from_national(index_prefix,source_id)
 
     print("indices: %s" % indices)
 
