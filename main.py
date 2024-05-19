@@ -177,6 +177,7 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
         try: 
             ## first try to get the indices from the identifier (this works if the repository is registered in the database)
             indices = dbhelper.get_indices_from_identifier(index_prefix, identifier)
+            print ("indices from identifier: %s" % indices)
         except IdentifierPrefixNotFoundException as e:
             ## if the identifier is not found in the database, then try to get the indices from the source (this will get national and regional statistics only)
             indices = dbhelper.get_indices_from_source(index_prefix, source)
