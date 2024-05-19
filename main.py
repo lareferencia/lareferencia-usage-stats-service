@@ -269,12 +269,12 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
     return response.get("aggregations", {})
 
 
-## repositoryWidget endpoint
+## repositoryWidgetByCountry endpoint
 @app.get("/report/itemWidgetByCountry")
-async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now'):
+async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', limit: int = 10):
 
     # parametrize the query based on the parameters
-    query = parametrize_bycountry_query(identifier, start_date, end_date)
+    query = parametrize_bycountry_query(identifier, start_date, end_date, limit)
     
     try:
 
@@ -308,6 +308,44 @@ async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_d
  
     return response.get("aggregations", {})
 
+
+## repositoryWidgetBycountry endpoint
+@app.get("/report/repositoryWidgetByCountry")
+async def repositoryWidgetByCountry(source_id: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', limit: int = 10):
+    source = dbhelper.get_source_by_id(source_id)
+
+    if source is None:
+        raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
+    
+    if source.type != "R":
+        raise HTTPException(status_code=404, detail="The source %s is not a repository" % (source))
+
+    #try:
+
+    identifier_prefix = dbhelper.get_identifier_prefix_from_source(source_id)
+    print("identifier_prefix: %s" % identifier_prefix)
+
+    identifier_pattern = identifier_prefix + "*"
+    query = parametrize_bycountry_query(identifier_pattern, start_date, end_date, limit)
+
+    indices = dbhelper.get_indices_from_identifier(index_prefix,identifier_prefix)
+
+    print("indices: %s" % indices)
+
+    if len(indices) == 0:
+        raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source))
+    
+    response = client.search(
+        body = query,
+        index = ','.join(indices),
+    )
+    #except Exception as e:
+    #    raise HTTPException(status_code=404, detail=str(e))
+
+    if response is None or response.get("aggregations") is None:
+        raise HTTPException(status_code=404, detail="Not found")   
+
+    return response.get("aggregations", {})
 
 
 ## repositoryWidget endpoint
