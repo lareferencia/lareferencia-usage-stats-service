@@ -169,10 +169,10 @@ def parametrize_bycountry_query(identifier, start_date, end_date, limit=10):
 
     query = { 
        "aggs": {
-            "views": { "sum": { "field": "stats_by_country.views" }},
-            "downloads": { "sum": { "field": "stats_by_country.downloads" }},
-            "conversions": { "sum": {"field": "stats_by_country.conversions" }},
-            "outlinks": { "sum": { "field": "stats_by_country.outlinks" }},
+            "views": { "sum": { "field": "views" }},
+            "downloads": { "sum": { "field": "downloads" }},
+            "conversions": { "sum": {"field": "conversions" }},
+            "outlinks": { "sum": { "field": "outlinks" }},
             
              "country": {
                         "terms": {"field": "stats_by_country.country",
