@@ -409,6 +409,8 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
     
     query = parametrize_query(None, start_date, end_date, time_unit)
 
+    print("query: %s" % query)
+
     response = client.search(
         body = query,
         index = ','.join(indices),
