@@ -367,6 +367,8 @@ async def repositoryWidgetByCountry(source_id: str = '*', start_date: 'str' = 'n
     identifier_pattern = identifier_prefix + "*"
     query = parametrize_bycountry_query(identifier_pattern, start_date, end_date, limit)
 
+    print("query: %s" % query)
+
     indices = dbhelper.get_indices_from_identifier(index_prefix,identifier_prefix)
 
     print("indices: %s" % indices)
