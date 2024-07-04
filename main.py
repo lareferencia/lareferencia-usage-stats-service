@@ -430,6 +430,8 @@ async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_d
 
     # parametrize the query based on the parameters
     query = parametrize_query(identifier, start_date, end_date, time_unit)
+
+    print("query: %s" % query)
     
     try:
 
