@@ -167,55 +167,114 @@ def parametrize_query(identifier, start_date, end_date, time_unit):
 
 def parametrize_bycountry_query(identifier, start_date, end_date, limit=10):
 
-    query = { 
-       "aggs": {
-            "views": { "sum": { "field": "views" }},
-            "downloads": { "sum": { "field": "downloads" }},
-            "conversions": { "sum": {"field": "conversions" }},
-            "outlinks": { "sum": { "field": "outlinks" }},
+    query = {
+        "aggs": {
+            "views": {
+            "sum": {
+                "field": "views"
+            }
+            },
+            "downloads": {
+            "sum": {
+                "field": "downloads"
+            }
+            },
+            "conversions": {
+            "sum": {
+                "field": "conversions"
+            }
+            },
+            "outlinks": {
+            "sum": {
+                "field": "outlinks"
+            }
+            },
+            "country": {
+            "nested": {
+            "path": "stats_by_country"
             
-             "country": {
-                        "terms": {"field": "stats_by_country.country",
-                        "order": { "_count": "desc"},
-                        "size": limit },
-                    
-                        "aggs": {
-                              "views": { "sum": { "field": "stats_by_country.views" }},
-                              "downloads": { "sum": { "field": "stats_by_country.downloads" }},
-                              "conversions": { "sum": {"field": "stats_by_country.conversions" }},
-                              "outlinks": { "sum": { "field": "stats_by_country.outlinks" }}
-                        }
+            },
+            "aggs": {
+                "views": {
+                "terms": {
+                    "field": "stats_by_country.country",
+                    "size": limit
+                }, 
+                "aggs": {
+                    "count": {
+                    "sum": {
+                        "field": "stats_by_country.views"
+                    }
+                    }
+                } 
+                },
+                "downloads": {
+                "terms": {
+                    "field": "stats_by_country.country",
+                    "size": limit
+                }, 
+                "aggs": {
+                    "count": {
+                    "sum": {
+                        "field": "stats_by_country.downloads"
+                    }
+                    }
+                } 
+                },
+                "outlinks": {
+                "terms": {
+                    "field": "stats_by_country.country",
+                    "size": limit
+                }, 
+                "aggs": {
+                    "count": {
+                    "sum": {
+                        "field": "stats_by_country.outlinks"
+                    }
+                    }
+                } 
+                },
+                "conversions": {
+                "terms": {
+                    "field": "stats_by_country.country",
+                    "size": limit
+                }, 
+                "aggs": {
+                    "count": {
+                    "sum": {
+                        "field": "stats_by_country.conversions"
+                    }
+                    }
+                } 
+                }
+            }
             }
         },
         "size": 0,
-        
         "query": {
-          "bool": {
-            "should": [
-              {
-                  "match_phrase": {
-                        "identifier": identifier
-                  }
-              }
+            "bool": {
+            "must": [
+                {
+                "match_phrase": {
+                    "identifier": identifier
+                }
+                }
             ],
-            "minimum_should_match": 1,
-            "must": [],
             "filter": [
-              {
+                {
                 "range": {
-                "date": {
+                    "date": {
                     "gte": start_date,
                     "lte": end_date,
                     "format": "strict_date_optional_time"
-                  }
+                    }
                 }
-              }
+                }
             ]
-          }
+            }
         },
-        
         "track_total_hits": "false"
-    }
+        }
 
     # if identifier is None, then remove the identifier from the query
     if identifier is None:
