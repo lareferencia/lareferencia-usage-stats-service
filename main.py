@@ -395,12 +395,14 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
     if len(indices) == 0:
         raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source))
     
-    response = client.search(
-        body = query,
-        index = ','.join(indices),
-    )
-    #except Exception as e:
-    #    raise HTTPException(status_code=404, detail=str(e))
+
+    try:
+        response = client.search(
+            body = query,
+            index = ','.join(indices),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     if response is None or response.get("aggregations") is None:
         raise HTTPException(status_code=404, detail="Not found")   
@@ -426,7 +428,7 @@ async def repositoryWidgetByCountry(source_id: str = '*', start_date: 'str' = 'n
     identifier_pattern = identifier_prefix + "*"
     query = parametrize_bycountry_query(identifier_pattern, start_date, end_date, limit)
 
-    print("query: %s" % query)
+    #print("query: %s" % query)
 
     indices = dbhelper.get_indices_from_identifier(index_prefix,identifier_prefix)
 
@@ -435,12 +437,13 @@ async def repositoryWidgetByCountry(source_id: str = '*', start_date: 'str' = 'n
     if len(indices) == 0:
         raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source))
     
-    response = client.search(
-        body = query,
-        index = ','.join(indices),
-    )
-    #except Exception as e:
-    #    raise HTTPException(status_code=404, detail=str(e))
+    try:
+        response = client.search(
+            body = query,
+            index = ','.join(indices),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     if response is None or response.get("aggregations") is None:
         raise HTTPException(status_code=404, detail="Not found")   
@@ -470,14 +473,15 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
     
     query = parametrize_query(None, start_date, end_date, time_unit)
 
-    print("query: %s" % query)
+    #print("query: %s" % query)
 
-    response = client.search(
-        body = query,
-        index = ','.join(indices),
-    )
-    #except Exception as e:
-    #    raise HTTPException(status_code=404, detail=str(e))
+    try:
+        response = client.search(
+            body = query,
+            index = ','.join(indices),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     if response is None or response.get("aggregations") is None:
         raise HTTPException(status_code=404, detail="Not found")   
@@ -492,23 +496,22 @@ async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_d
     # parametrize the query based on the parameters
     query = parametrize_query(identifier, start_date, end_date, time_unit)
 
-    print("query: %s" % query)
+    #print("query: %s" % query)
     
+    try: 
+        ## first try to get the indices from the identifier (this works if the repository is registered in the database)
+        indices = dbhelper.get_indices_from_identifier(index_prefix, identifier)
+        print ("indices from identifier: %s" % indices)
+    except IdentifierPrefixNotFoundException as e:
+        ## if the identifier is not found in the database, then try to get the indices from the source (this will get national and regional statistics only)
+        indices = dbhelper.get_indices_from_source(index_prefix, source)
+
+    if len(indices) == 0:
+        raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source, identifier))
+    
+    print ("indices: %s" % indices)
+
     try:
-
-        try: 
-            ## first try to get the indices from the identifier (this works if the repository is registered in the database)
-            indices = dbhelper.get_indices_from_identifier(index_prefix, identifier)
-            print ("indices from identifier: %s" % indices)
-        except IdentifierPrefixNotFoundException as e:
-            ## if the identifier is not found in the database, then try to get the indices from the source (this will get national and regional statistics only)
-            indices = dbhelper.get_indices_from_source(index_prefix, source)
-
-        if len(indices) == 0:
-            raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source, identifier))
-        
-        print ("indices: %s" % indices)
-
         response = client.search(
             body = query,
             index = ','.join(indices),
