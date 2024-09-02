@@ -405,7 +405,9 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
     try:
         response = client.search(
             body = query,
-            index = ','.join(indices),
+            index = ','.join(indices), 
+            allow_no_indices=True, 
+            ignore_unavailable=True
         )
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
