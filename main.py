@@ -312,8 +312,9 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
 
         response = client.search(
             body = query,
-            index = ','.join(indices),
-            #index = "usage-stats-48-*",
+            index = ','.join(indices), 
+            allow_no_indices=True, 
+            ignore_unavailable=True
         )
     except Exception as e:
         #print ("Error: %s" % e)
@@ -353,7 +354,8 @@ async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_d
         response = client.search(
             body = query,
             index = ','.join(indices),
-            #index = "usage-stats-48-*",
+            allow_no_indices=True, 
+            ignore_unavailable=True
         )
     except Exception as e:
         #print ("Error: %s" % e)
@@ -491,6 +493,8 @@ async def repositoryWidgetByCountry(source_id: str = '*', start_date: 'str' = 'n
         response = client.search(
             body = query,
             index = ','.join(indices),
+            allow_no_indices=True, 
+            ignore_unavailable=True
         )
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
