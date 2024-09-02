@@ -377,18 +377,23 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
     if source is None:
         raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
     
-    if source.type != "R":
-        raise HTTPException(status_code=404, detail="The source %s is not a repository" % (source))
+    if source.type == "R":
+        #raise HTTPException(status_code=404, detail="The source %s is not a repository" % (source))
 
-    #try:
+        identifier_prefix = dbhelper.get_identifier_prefix_from_source(source_id)
+        print("identifier_prefix: %s" % identifier_prefix)
 
-    identifier_prefix = dbhelper.get_identifier_prefix_from_source(source_id)
-    print("identifier_prefix: %s" % identifier_prefix)
+        identifier_pattern = identifier_prefix + "*"
+        query = parametrize_query(identifier_pattern, start_date, end_date, time_unit)
 
-    identifier_pattern = identifier_prefix + "*"
-    query = parametrize_query(identifier_pattern, start_date, end_date, time_unit)
+        indices = dbhelper.get_indices_from_identifier(index_prefix,identifier_prefix)
+    
+    elif source.type == "N":
+        indices = dbhelper.get_indices_from_national(index_prefix,source_id)
+    else:
+        raise HTTPException(status_code=404, detail="The source %s is not a repository or national source" % (source))
 
-    indices = dbhelper.get_indices_from_identifier(index_prefix,identifier_prefix)
+
 
     print("indices: %s" % indices)
 
