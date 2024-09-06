@@ -290,10 +290,11 @@ async def itemWidget(identifier: str = None, source_id: str = '*', start_date: '
     query = parametrize_query(identifier, start_date, end_date, time_unit)
 
     # get the source
-    source = dbhelper.get_source_by_id(source_id)
-    if source is None:
-        raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
-    
+    if source_id != '*':
+        source = dbhelper.get_source_by_id(source_id)
+        if source is None:
+            raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
+        
     try:
 
         try: 
@@ -336,10 +337,11 @@ async def itemWidgetByCountry(identifier: str = None, source_id: str = '*', star
     query = parametrize_bycountry_query(identifier, start_date, end_date, limit)
     
      # get the source
-    source = dbhelper.get_source_by_id(source_id)
-    if source is None:
-        raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
-    
+    if source_id != '*':
+        source = dbhelper.get_source_by_id(source_id)
+        if source is None:
+            raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
+        
 
     try:
 
