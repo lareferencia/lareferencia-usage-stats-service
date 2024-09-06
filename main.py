@@ -1,6 +1,7 @@
 
 import sys
 from textwrap import indent
+import traceback
 from unittest import result
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -322,7 +323,7 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
         #print ("Error: %s" % e)
         # stacktrace
         # import traceback
-        # traceback.print_exc()
+        traceback.print_exc()
         raise HTTPException(status_code=404, detail=str(e))
     
     if response is None or response.get("aggregations") is None:
