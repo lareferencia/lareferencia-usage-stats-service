@@ -278,8 +278,8 @@ def parametrize_bycountry_query(identifier, start_date, end_date, limit=10):
 
     # if identifier is None, then remove the identifier from the query
     if identifier is None:
-        del query["query"]["bool"]["should"]
-        del query['query']['bool']['minimum_should_match']
+        del query["query"]["bool"]["must"]
+        #del query['query']['bool']['minimum_should_match']
 
     return query
 
