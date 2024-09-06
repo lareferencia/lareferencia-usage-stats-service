@@ -327,6 +327,8 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
     
     if response is None or response.get("aggregations") is None:
         raise HTTPException(status_code=404, detail="Not found")   
+    
+    print( query)
  
     return response.get("aggregations", {})
 
