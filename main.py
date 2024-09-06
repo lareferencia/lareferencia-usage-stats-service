@@ -396,11 +396,11 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
         indices = dbhelper.get_indices_from_identifier(index_prefix,identifier_prefix)
     
     elif source.type == SOURCE_TYPE_NATIONAL:
-        indices = dbhelper.get_indices_from_national(index_prefix,source)
+        indices = dbhelper.get_indices_from_national_source(index_prefix,source)
         query = parametrize_query(None, start_date, end_date, time_unit, country)
 
     elif source.type == SOURCE_TYPE_REGIONAL:
-        indices = dbhelper.get_indices_from_regional(index_prefix,source)
+        indices = dbhelper.get_indices_from_regional_source(index_prefix,source)
         query = parametrize_query(None, start_date, end_date, time_unit, country)
     else:
         raise HTTPException(status_code=404, detail="The source %s is not a repository or national source" % (source))
