@@ -9,7 +9,7 @@ from fastapi.exceptions import HTTPException
 from config import read_ini
 from opensearchpy import OpenSearch, exceptions
 
-from lareferenciastatsdb import UsageStatsDatabaseHelper, IdentifierPrefixNotFoundException
+from lareferenciastatsdb import UsageStatsDatabaseHelper, IdentifierPrefixNotFoundException, SOURCE_TYPE_NATIONAL, SOURCE_TYPE_REPOSITORY, SOURCE_TYPE_REGIONAL
 
 app = FastAPI(
     title="LA Referencia Usage Statistics API",
@@ -83,7 +83,7 @@ app.add_middleware(
 
 
 
-def parametrize_query(identifier, start_date, end_date, time_unit):
+def parametrize_query(identifier, start_date, end_date, time_unit, country=None):
 
     query = { 
        "aggs": {
@@ -131,14 +131,6 @@ def parametrize_query(identifier, start_date, end_date, time_unit):
         
         "query": {
           "bool": {
-            "should": [
-              {
-                  "match_phrase": {
-                        "identifier": identifier
-                  }
-              }
-            ],
-            "minimum_should_match": 1,
             "must": [],
             "filter": [
               {
@@ -157,15 +149,19 @@ def parametrize_query(identifier, start_date, end_date, time_unit):
         "track_total_hits": "false"
     }
 
-    # if identifier is None, then remove the identifier from the query
-    if identifier is None:
-        del query["query"]["bool"]["should"]
-        del query['query']['bool']['minimum_should_match']
+    # if idendentifier is not None add the identifier to the query
+    if identifier is not None:
+        query["query"]["bool"]["must"].append({ "match": { "identifier": identifier } })
 
+    # if country is not None add the country to the query
+    if country is not None:
+        query["query"]["bool"]["must"].append({ "match": { "country": country } })
+
+   
     return query
   
 
-def parametrize_bycountry_query(identifier, start_date, end_date, limit=10):
+def parametrize_bycountry_query(identifier, start_date, end_date, limit=10, country=None):
 
     query = {
         "aggs": {
@@ -253,13 +249,7 @@ def parametrize_bycountry_query(identifier, start_date, end_date, limit=10):
         "size": 0,
         "query": {
             "bool": {
-            "must": [
-                {
-                "match_phrase": {
-                    "identifier": identifier
-                }
-                }
-            ],
+            "must": [],
             "filter": [
                 {
                 "range": {
@@ -276,10 +266,14 @@ def parametrize_bycountry_query(identifier, start_date, end_date, limit=10):
         "track_total_hits": "false"
         }
 
-    # if identifier is None, then remove the identifier from the query
-    if identifier is None:
-        del query["query"]["bool"]["must"]
-        #del query['query']['bool']['minimum_should_match']
+     # if idendentifier is not None add the identifier to the query
+    if identifier is not None:
+        query["query"]["bool"]["must"].append({ "match": { "identifier": identifier } })
+
+    # if country is not None add the country to the query
+    if country is not None:
+        query["query"]["bool"]["must"].append({ "match": { "country": country } })
+
 
     return query
 
@@ -290,10 +284,15 @@ def parametrize_bycountry_query(identifier, start_date, end_date, limit=10):
 
 ## repositoryWidget endpoint
 @app.get("/report/itemWidget")
-async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
+async def itemWidget(identifier: str = None, source_id: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
 
     # parametrize the query based on the parameters
     query = parametrize_query(identifier, start_date, end_date, time_unit)
+
+    # get the source
+    source = dbhelper.get_source_by_id(source_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
     
     try:
 
@@ -306,7 +305,7 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
             indices = dbhelper.get_indices_from_source(index_prefix, source)
 
         if len(indices) == 0:
-            raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source, identifier))
+            raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source_id, identifier))
         
         print ("indices: %s" % indices)
 
@@ -331,11 +330,17 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
 
 ## repositoryWidgetByCountry endpoint
 @app.get("/report/itemWidgetByCountry")
-async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', limit: int = 10):
+async def itemWidgetByCountry(identifier: str = None, source_id: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', limit: int = 10):
 
     # parametrize the query based on the parameters
     query = parametrize_bycountry_query(identifier, start_date, end_date, limit)
     
+     # get the source
+    source = dbhelper.get_source_by_id(source_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
+    
+
     try:
 
         try: 
@@ -347,7 +352,7 @@ async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_d
             indices = dbhelper.get_indices_from_source(index_prefix, source)
 
         if len(indices) == 0:
-            raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source, identifier))
+            raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source_id, identifier))
         
         print ("indices: %s" % indices)
 
@@ -369,61 +374,20 @@ async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_d
  
     return response.get("aggregations", {})
 
-
-## repositoryWidget endpoint
-# @app.get("/report/itemWidgetByCountry")
-# async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
-
-#     # parametrize the query based on the parameters
-#     query = parametrize_query(identifier, start_date, end_date, time_unit)
-
-#     #print("query: %s" % query)
-    
-#     try: 
-#         ## first try to get the indices from the identifier (this works if the repository is registered in the database)
-#         indices = dbhelper.get_indices_from_identifier(index_prefix, identifier)
-#         print ("indices from identifier: %s" % indices)
-#     except IdentifierPrefixNotFoundException as e:
-#         ## if the identifier is not found in the database, then try to get the indices from the source (this will get national and regional statistics only)
-#         indices = dbhelper.get_indices_from_source(index_prefix, source)
-
-#     if len(indices) == 0:
-#         raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source, identifier))
-    
-#     print ("indices: %s" % indices)
-
-#     try:
-#         response = client.search(
-#             body = query,
-#             index = ','.join(indices),
-#             #index = "usage-stats-48-*",
-#         )
-#     except Exception as e:
-#         #print ("Error: %s" % e)
-#         # stacktrace
-#         # import traceback
-#         # traceback.print_exc()
-#         raise HTTPException(status_code=404, detail=str(e))
-    
-#     if response is None or response.get("aggregations") is None:
-#         raise HTTPException(status_code=404, detail="Not found")   
- 
-#     return response.get("aggregations", {})
-
-
 ## repositoryWidget endpoint
 @app.get("/report/repositoryWidget")
 async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
 
     source = dbhelper.get_source_by_id(source_id)
+    country = source.country_iso
 
     if source is None:
         raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
     
-    if source.type == "R":
+    if source.type == SOURCE_TYPE_REPOSITORY:
         #raise HTTPException(status_code=404, detail="The source %s is not a repository" % (source))
 
-        identifier_prefix = dbhelper.get_identifier_prefix_from_source(source_id)
+        identifier_prefix = dbhelper.get_identifier_prefix_from_source(source)
         print("identifier_prefix: %s" % identifier_prefix)
 
         identifier_pattern = identifier_prefix + "*"
@@ -431,13 +395,15 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
 
         indices = dbhelper.get_indices_from_identifier(index_prefix,identifier_prefix)
     
-    elif source.type == "N":
-        indices = dbhelper.get_indices_from_national(index_prefix,source_id)
-        query = parametrize_query(None, start_date, end_date, time_unit)
+    elif source.type == SOURCE_TYPE_NATIONAL:
+        indices = dbhelper.get_indices_from_national(index_prefix,source)
+        query = parametrize_query(None, start_date, end_date, time_unit, country)
+
+    elif source.type == SOURCE_TYPE_REGIONAL:
+        indices = dbhelper.get_indices_from_regional(index_prefix,source)
+        query = parametrize_query(None, start_date, end_date, time_unit, country)
     else:
         raise HTTPException(status_code=404, detail="The source %s is not a repository or national source" % (source))
-
-
 
     print("indices: %s" % indices)
 
@@ -463,14 +429,15 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
 ## repositoryWidgetBycountry endpoint
 @app.get("/report/repositoryWidgetByCountry")
 async def repositoryWidgetByCountry(source_id: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', limit: int = 10):
+    
     source = dbhelper.get_source_by_id(source_id)
 
     if source is None:
         raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
     
-    if source.type == "R":
+    if source.type == SOURCE_TYPE_REPOSITORY:
     
-        identifier_prefix = dbhelper.get_identifier_prefix_from_source(source_id)
+        identifier_prefix = dbhelper.get_identifier_prefix_from_source(source)
         print("identifier_prefix: %s" % identifier_prefix)
 
         identifier_pattern = identifier_prefix + "*"
@@ -478,9 +445,14 @@ async def repositoryWidgetByCountry(source_id: str = '*', start_date: 'str' = 'n
 
         indices = dbhelper.get_indices_from_identifier(index_prefix,identifier_prefix)
 
-    elif source.type == "N":
-        indices = dbhelper.get_indices_from_national(index_prefix,source_id)
+    elif source.type == SOURCE_TYPE_NATIONAL:
+        indices = dbhelper.get_indices_from_national_source(index_prefix,source)
         query = parametrize_bycountry_query(None, start_date, end_date, limit)
+    
+    elif source.type == SOURCE_TYPE_REGIONAL:
+        indices = dbhelper.get_indices_from_regional_source(index_prefix,source)
+        query = parametrize_bycountry_query(None, start_date, end_date, limit)
+
     else:
         raise HTTPException(status_code=404, detail="The source %s is not a repository or national source" % (source))
 
