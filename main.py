@@ -430,6 +430,8 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
 
     if response is None or response.get("aggregations") is None:
         raise HTTPException(status_code=404, detail="Not found")   
+    
+    print(query)
  
     return response.get("aggregations", {})
 
