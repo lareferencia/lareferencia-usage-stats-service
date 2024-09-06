@@ -151,7 +151,7 @@ def parametrize_query(identifier, start_date, end_date, time_unit, country=None)
 
     # if idendentifier is not None add the identifier to the query
     if identifier is not None:
-        query["query"]["bool"]["must"].append({ "match": { "identifier": identifier } })
+        query["query"]["bool"]["must"].append({ "match_phrase": { "identifier": identifier } })
 
     # if country is not None add the country to the query
     if country is not None:
@@ -268,7 +268,7 @@ def parametrize_bycountry_query(identifier, start_date, end_date, limit=10, coun
 
      # if idendentifier is not None add the identifier to the query
     if identifier is not None:
-        query["query"]["bool"]["must"].append({ "match": { "identifier": identifier } })
+        query["query"]["bool"]["must"].append({ "match_phrase": { "identifier": identifier } })
 
     # if country is not None add the country to the query
     if country is not None:
@@ -327,9 +327,7 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
     
     if response is None or response.get("aggregations") is None:
         raise HTTPException(status_code=404, detail="Not found")   
-    
-    print( query)
- 
+     
     return response.get("aggregations", {})
 
 
