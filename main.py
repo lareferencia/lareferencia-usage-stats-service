@@ -284,7 +284,9 @@ def parametrize_bycountry_query(identifier, start_date, end_date, limit=10, coun
 
 ## repositoryWidget endpoint
 @app.get("/report/itemWidget")
-async def itemWidget(identifier: str = None, source_id: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
+async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
+
+    source_id = source
 
     # parametrize the query based on the parameters
     query = parametrize_query(identifier, start_date, end_date, time_unit)
@@ -331,7 +333,9 @@ async def itemWidget(identifier: str = None, source_id: str = '*', start_date: '
 
 ## repositoryWidgetByCountry endpoint
 @app.get("/report/itemWidgetByCountry")
-async def itemWidgetByCountry(identifier: str = None, source_id: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', limit: int = 10):
+async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', limit: int = 10):
+
+    source_id = source
 
     # parametrize the query based on the parameters
     query = parametrize_bycountry_query(identifier, start_date, end_date, limit)
