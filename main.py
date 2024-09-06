@@ -408,7 +408,7 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
 
     elif source.type == SOURCE_TYPE_REGIONAL:
         indices = dbhelper.get_indices_from_regional_source(index_prefix,source)
-        query = parametrize_query(None, start_date, end_date, time_unit, country)
+        query = parametrize_query(None, start_date, end_date, time_unit)
     else:
         raise HTTPException(status_code=404, detail="The source %s is not a repository or national source" % (source))
 
@@ -431,7 +431,6 @@ async def repositoryWidget(source_id: str = '*', start_date: 'str' = 'now-1y', e
     if response is None or response.get("aggregations") is None:
         raise HTTPException(status_code=404, detail="Not found")   
     
-    print(query)
  
     return response.get("aggregations", {})
 
