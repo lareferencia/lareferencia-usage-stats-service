@@ -341,36 +341,39 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
 @app.get("/report/itemWidgetByCountry")
 async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', limit: int = 10):
 
-    source_id = source
-
     # parametrize the query based on the parameters
     query = parametrize_bycountry_query(identifier, start_date, end_date, limit)
     
-     # get the source
-    if source_id != '*':
-        source = dbhelper.get_source_by_id(source_id)
-        if source is None:
-            raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
+    source_id = source
+    indices = None
         
-
     try:
 
         try: 
             ## first try to get the indices from the identifier (this works if the repository is registered in the database)
             indices = dbhelper.get_indices_from_identifier(index_prefix, identifier)
             print ("indices from identifier: %s" % indices)
-        except IdentifierPrefixNotFoundException as e:
-            ## if the identifier is not found in the database, then try to get the indices from the source (this will get national and regional statistics only)
-            indices = dbhelper.get_indices_from_source(index_prefix, source)
 
-        if len(indices) == 0:
+        except IdentifierPrefixNotFoundException as e:
+            print ("identifier not found: %s" % identifier)    
+
+            # get the source
+            if source_id is not None and source_id != "" and source_id != '*':
+                source_obj = dbhelper.get_source_by_id(source_id)
+                if source_obj is None:
+                    raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
+                else:
+                    ## if the identifier is not found in the database, then try to get the indices from the source (this will get national and regional statistics only)
+                    indices = dbhelper.get_indices_from_source(index_prefix, source_obj)
+
+        if indices is None or len(indices) == 0:
             raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source_id, identifier))
         
         print ("indices: %s" % indices)
 
         response = client.search(
             body = query,
-            index = ','.join(indices),
+            index = ','.join(indices), 
             allow_no_indices=True, 
             ignore_unavailable=True
         )
@@ -378,12 +381,12 @@ async def itemWidgetByCountry(identifier: str = None, source: str = '*', start_d
         #print ("Error: %s" % e)
         # stacktrace
         # import traceback
-        # traceback.print_exc()
+        traceback.print_exc()
         raise HTTPException(status_code=404, detail=str(e))
     
     if response is None or response.get("aggregations") is None:
         raise HTTPException(status_code=404, detail="Not found")   
- 
+
     return response.get("aggregations", {})
 
 ## repositoryWidget endpoint
