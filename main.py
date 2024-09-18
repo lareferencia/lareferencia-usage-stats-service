@@ -287,12 +287,11 @@ def parametrize_bycountry_query(identifier, start_date, end_date, limit=10, coun
 @app.get("/report/itemWidget")
 async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str' = 'now-1y', end_date: 'str' = 'now', time_unit : str = 'year'):
 
-    source_id = source
 
     # parametrize the query based on the parameters
     query = parametrize_query(identifier, start_date, end_date, time_unit)
 
-  
+    source_id = source
         
     try:
 
@@ -300,7 +299,9 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
             ## first try to get the indices from the identifier (this works if the repository is registered in the database)
             indices = dbhelper.get_indices_from_identifier(index_prefix, identifier)
             print ("indices from identifier: %s" % indices)
+
         except IdentifierPrefixNotFoundException as e:
+            print ("identifier not found: %s" % identifier)    
 
             # get the source
             if source_id is not None and source_id != "" and source_id != '*':
@@ -310,7 +311,7 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
         
             ## if the identifier is not found in the database, then try to get the indices from the source (this will get national and regional statistics only)
             indices = dbhelper.get_indices_from_source(index_prefix, source)
-            print ("identifier not found: %s" % identifier)
+            
 
         if len(indices) == 0:
             raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source_id, identifier))
