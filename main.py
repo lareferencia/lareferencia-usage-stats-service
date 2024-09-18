@@ -307,7 +307,7 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
         except IdentifierPrefixNotFoundException as e:
             ## if the identifier is not found in the database, then try to get the indices from the source (this will get national and regional statistics only)
             indices = dbhelper.get_indices_from_source(index_prefix, source)
-            print ("identifier not found: %s", identifier)
+            print ("identifier not found: %s" % identifier)
 
         if len(indices) == 0:
             raise HTTPException(status_code=404, detail="The source %s and identifier %s are not present in the database" % (source_id, identifier))
