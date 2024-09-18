@@ -305,12 +305,12 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
 
             # get the source
             if source_id is not None and source_id != "" and source_id != '*':
-                source = dbhelper.get_source_by_id(source_id)
-                if source is None:
+                source_obj = dbhelper.get_source_by_id(source_id)
+                if source_obj is None:
                     raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
         
             ## if the identifier is not found in the database, then try to get the indices from the source (this will get national and regional statistics only)
-            indices = dbhelper.get_indices_from_source(index_prefix, source)
+            indices = dbhelper.get_indices_from_source(index_prefix, source_obj)
             
 
         if len(indices) == 0:
