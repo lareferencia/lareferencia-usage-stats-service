@@ -292,11 +292,7 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
     # parametrize the query based on the parameters
     query = parametrize_query(identifier, start_date, end_date, time_unit)
 
-    # get the source
-    if source_id is not None and source_id != "" and source_id != '*':
-        source = dbhelper.get_source_by_id(source_id)
-        if source is None:
-            raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
+  
         
     try:
 
@@ -305,6 +301,13 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
             indices = dbhelper.get_indices_from_identifier(index_prefix, identifier)
             print ("indices from identifier: %s" % indices)
         except IdentifierPrefixNotFoundException as e:
+
+            # get the source
+            if source_id is not None and source_id != "" and source_id != '*':
+                source = dbhelper.get_source_by_id(source_id)
+                if source is None:
+                    raise HTTPException(status_code=404, detail="The source %s is not present in the database" % (source_id))
+        
             ## if the identifier is not found in the database, then try to get the indices from the source (this will get national and regional statistics only)
             indices = dbhelper.get_indices_from_source(index_prefix, source)
             print ("identifier not found: %s" % identifier)
