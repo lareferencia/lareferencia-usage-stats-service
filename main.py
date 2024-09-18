@@ -292,6 +292,7 @@ async def itemWidget(identifier: str = None, source: str = '*', start_date: 'str
     query = parametrize_query(identifier, start_date, end_date, time_unit)
 
     source_id = source
+    indices = None
         
     try:
 
